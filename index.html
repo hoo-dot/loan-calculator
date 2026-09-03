@@ -442,6 +442,7 @@
               <input type="text" id="loanAmt" class="formatted-number" value="100,000,000" />
               <span class="unit">원</span>
             </div>
+            <div style="font-size:0.85rem; color:#a78bfa; margin-top:-2px" id="loanAmtKo">1억원</div>
             <input type="range" id="loanRange" min="1000000" max="1000000000" step="1000000" value="100000000"
               oninput="syncRange('loanAmt','loanRange',1000000,1000000000)" />
             <div class="range-labels"><span>100만</span><span>10억</span></div>
@@ -579,11 +580,34 @@
       const n = document.getElementById(numId);
       if (numId === 'loanAmt') {
         n.value = Number(r.value).toLocaleString('ko-KR');
+        updateKoreanAmount(Number(r.value));
       } else {
         n.value = r.value;
       }
       updateRangeColor(r, min, max);
       if (numId === 'term') updateTermYear();
+    }
+
+    function numberToKorean(num) {
+      if (num === 0) return '0';
+      const units = ['', '만', '억', '조'];
+      let result = '';
+      let i = 0;
+
+      while (num > 0) {
+        let chunk = num % 10000;
+        if (chunk > 0) {
+          result = chunk + units[i] + (result ? ' ' : '') + result;
+        }
+        num = Math.floor(num / 10000);
+        i++;
+      }
+      return result + '원';
+    }
+
+    function updateKoreanAmount(num) {
+      const korEl = document.getElementById('loanAmtKo');
+      if (korEl) korEl.textContent = numberToKorean(num);
     }
 
     function updateRangeColor(el, min, max) {
@@ -610,6 +634,9 @@
 
       // 포맷팅해서 입력창 갱신
       this.value = num.toLocaleString('ko-KR');
+
+      // 한글 금액 표기 갱신
+      updateKoreanAmount(num);
 
       // 슬라이더 동기화
       const r = document.getElementById('loanRange');
