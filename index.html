@@ -126,6 +126,7 @@
     }
 
     input[type="number"]:focus,
+    input[type="text"].formatted-number:focus,
     select:focus {
       border-color: #a78bfa;
       box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
@@ -438,7 +439,7 @@
           <label>대출 금액</label>
           <div class="range-wrap">
             <div class="input-wrap">
-              <input type="number" id="loanAmt" value="100000000" min="1000000" max="1000000000" step="1000000" />
+              <input type="text" id="loanAmt" class="formatted-number" value="100,000,000" />
               <span class="unit">원</span>
             </div>
             <input type="range" id="loanRange" min="1000000" max="1000000000" step="1000000" value="100000000"
@@ -576,7 +577,11 @@
     function syncRange(numId, rangeId, min, max) {
       const r = document.getElementById(rangeId);
       const n = document.getElementById(numId);
-      n.value = r.value;
+      if (numId === 'loanAmt') {
+        n.value = Number(r.value).toLocaleString('ko-KR');
+      } else {
+        n.value = r.value;
+      }
       updateRangeColor(r, min, max);
       if (numId === 'term') updateTermYear();
     }
@@ -593,17 +598,37 @@
       else el.textContent = '';
     }
 
-    // 숫자 입력 → 슬라이더 동기화
-    ['loanAmt', 'rate', 'term'].forEach(id => {
+    // 대출금액 콤마 처리 이벤트
+    document.getElementById('loanAmt').addEventListener('input', function () {
+      // 숫자만 남기기
+      let value = this.value.replace(/[^0-9]/g, '');
+      if (!value) value = '0';
+
+      // 제한 (10억 최대)
+      let num = parseInt(value, 10);
+      if (num > 1000000000) num = 1000000000;
+
+      // 포맷팅해서 입력창 갱신
+      this.value = num.toLocaleString('ko-KR');
+
+      // 슬라이더 동기화
+      const r = document.getElementById('loanRange');
+      r.value = num;
+      updateRangeColor(r, 1000000, 1000000000);
+    });
+
+    // 이자율, 기간 숫자 입력 → 슬라이더 동기화
+    ['rate', 'term'].forEach(id => {
       document.getElementById(id).addEventListener('input', function () {
         const rId = id + 'Range';
         const r = document.getElementById(rId);
         r.value = this.value;
-        const ranges = { loanAmt: [1000000, 1000000000], rate: [0.1, 30], term: [1, 480] };
+        const ranges = { rate: [0.1, 30], term: [1, 480] };
         updateRangeColor(r, ...ranges[id]);
         if (id === 'term') updateTermYear();
       });
     });
+
 
     // 초기 슬라이더 색상
     updateRangeColor(document.getElementById('loanRange'), 1000000, 1000000000);
