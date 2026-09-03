@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>대출 계산기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+      color: #fff;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      gap: 24px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    h1 span { font-size: 1.4rem; }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 28px 32px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media(max-width:600px){ .form-grid { grid-template-columns: 1fr; } }
+
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #c4b5fd;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap .unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 13px 42px 13px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"]:focus, select:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.2);
+    }
+    select { padding-right: 14px; cursor: pointer; }
+    select option { background: #302b63; }
+
+    .range-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 99px;
+      background: linear-gradient(to right, #a78bfa 0%, #a78bfa var(--pct, 50%), rgba(255,255,255,0.15) var(--pct, 50%));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #a78bfa;
+      box-shadow: 0 0 8px rgba(167,139,250,0.6);
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .range-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; }
+
+    .repay-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .repay-options label {
+      flex: 1;
+      min-width: 120px;
+      cursor: pointer;
+    }
+    .repay-options input[type="radio"] { display: none; }
+    .repay-options .pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .repay-options input[type="radio"]:checked + .pill {
+      border-color: #a78bfa;
+      background: rgba(167,139,250,0.15);
+      color: #e9d5ff;
+    }
+
+    .btn-calc {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #7c3aed, #2563eb);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+      letter-spacing: 0.3px;
+      margin-top: 4px;
+    }
+    .btn-calc:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,0.5); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* Result */
+    .result-card {
+      display: none;
+      animation: slideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .result-card.show { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #c4b5fd;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-title::after {
+      content:'';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media(max-width:500px){ .summary-grid { grid-template-columns: 1fr; } }
+
+    .summary-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+    }
+    .summary-item .s-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
+    .summary-item .s-value { font-size: 1.35rem; font-weight: 700; }
+    .summary-item.highlight .s-value { color: #a78bfa; }
+    .summary-item.red     .s-value { color: #f87171; }
+
+    /* Pie chart */
+    .chart-area {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .pie-wrap {
+      flex-shrink: 0;
+    }
+    svg.pie circle { transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1); }
+    .legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+    /* 상환 스케줄 테이블 */
+    .schedule-wrap { overflow-x: auto; border-radius: 12px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      white-space: nowrap;
+    }
+    thead th {
+      background: rgba(167,139,250,0.15);
+      padding: 10px 14px;
+      text-align: right;
+      font-weight: 600;
+      color: #c4b5fd;
+    }
+    thead th:first-child { text-align: center; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+    tbody td { padding: 9px 14px; text-align: right; color: #cbd5e1; }
+    tbody td:first-child { text-align: center; color: #94a3b8; }
+
+    .table-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: #a78bfa;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+    .table-toggle svg { transition: transform 0.25s; }
+    .table-toggle.open svg { transform: rotate(180deg); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <h1>🏦 대출 계산기</h1>
+
+  <!-- 입력 카드 -->
+  <div class="card">
+    <div class="form-grid">
+
+      <!-- 대출금액 -->
+      <div class="field form-full" style="grid-column:1/-1">
+        <label>대출 금액</label>
+        <div class="range-wrap">
+          <div class="input-wrap">
+            <input type="number" id="loanAmt" value="100000000" min="1000000" max="1000000000" step="1000000" />
+            <span class="unit">원</span>
+          </div>
+          <input type="range" id="loanRange" min="1000000" max="1000000000" step="1000000" value="100000000" oninput="syncRange('loanAmt','loanRange',1000000,1000000000)" />
+          <div class="range-labels"><span>100만</span><span>10억</span></div>
+        </div>
+      </div>
+
+      <!-- 연이율 -->
+      <div class="field">
+        <label>연 이자율 (%)</label>
+        <div class="range-wrap">
+          <div class="input-wrap">
+            <input type="number" id="rate" value="4.5" min="0.1" max="30" step="0.1" />
+            <span class="unit">%</span>
+          </div>
+          <input type="range" id="rateRange" min="0.1" max="30" step="0.1" value="4.5" oninput="syncRange('rate','rateRange',0.1,30)" />
+          <div class="range-labels"><span>0.1%</span><span>30%</span></div>
+        </div>
+      </div>
+
+      <!-- 대출기간 -->
+      <div class="field">
+        <label>대출 기간</label>
+        <div class="range-wrap">
+          <div style="display:flex;gap:10px">
+            <div class="input-wrap" style="flex:1">
+              <input type="number" id="term" value="36" min="1" max="480" step="1" />
+              <span class="unit">개월</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:#94a3b8;min-width:60px" id="termYear"></div>
+          </div>
+          <input type="range" id="termRange" min="1" max="480" step="1" value="36" oninput="syncRange('term','termRange',1,480)" />
+          <div class="range-labels"><span>1개월</span><span>480개월(40년)</span></div>
+        </div>
+      </div>
+
+      <!-- 상환 방식 -->
+      <div class="field" style="grid-column:1/-1">
+        <label>상환 방식</label>
+        <div class="repay-options">
+          <label>
+            <input type="radio" name="repay" value="equal" checked />
+            <div class="pill">📊 원리금균등상환</div>
+          </label>
+          <label>
+            <input type="radio" name="repay" value="principal" />
+            <div class="pill">📉 원금균등상환</div>
+          </label>
+          <label>
+            <input type="radio" name="repay" value="bullet" />
+            <div class="pill">💰 만기일시상환</div>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">계산하기</button>
+  </div>
+
+  <!-- 결과 카드 -->
+  <div class="card result-card" id="resultCard">
+
+    <div class="result-title">📋 계산 결과</div>
+
+    <div class="summary-grid">
+      <div class="summary-item highlight">
+        <div class="s-label">월 납부금액 (첫달)</div>
+        <div class="s-value" id="r-monthly">-</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">총 납부금액</div>
+        <div class="s-value" id="r-total">-</div>
+      </div>
+      <div class="summary-item red">
+        <div class="s-label">총 이자</div>
+        <div class="s-value" id="r-interest">-</div>
+      </div>
+    </div>
+
+    <!-- 파이차트 -->
+    <div class="chart-area">
+      <div class="pie-wrap">
+        <svg width="130" height="130" viewBox="0 0 42 42" class="pie" style="transform:rotate(-90deg)">
+          <circle id="pie-bg" cx="21" cy="21" r="15.9" fill="none" stroke="rgba(248,113,113,0.6)" stroke-width="8" />
+          <circle id="pie-main" cx="21" cy="21" r="15.9" fill="none" stroke="rgba(167,139,250,0.85)" stroke-width="8"
+            stroke-dasharray="100 0" stroke-dashoffset="0" />
+        </svg>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa88"></div><span id="leg-principal">원금: -</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171aa"></div><span id="leg-interest">이자: -</span></div>
+        <div class="legend-item" style="color:#64748b;font-size:0.78rem" id="leg-ratio"></div>
+      </div>
+    </div>
+
+    <!-- 상환 스케줄 토글 -->
+    <button class="table-toggle" id="scheduleToggle" onclick="toggleSchedule()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      월별 상환 스케줄 보기
+    </button>
+
+    <div id="scheduleWrap" style="display:none">
+      <div class="schedule-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>회차</th>
+              <th>월 납부액</th>
+              <th>원금</th>
+              <th>이자</th>
+              <th>잔여 원금</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const fmt = v => Math.round(v).toLocaleString('ko-KR') + '원';
+
+function syncRange(numId, rangeId, min, max) {
+  const r = document.getElementById(rangeId);
+  const n = document.getElementById(numId);
+  n.value = r.value;
+  updateRangeColor(r, min, max);
+  if (numId === 'term') updateTermYear();
+}
+
+function updateRangeColor(el, min, max) {
+  const pct = ((el.value - min) / (max - min)) * 100;
+  el.style.setProperty('--pct', pct + '%');
+}
+
+function updateTermYear() {
+  const m = parseInt(document.getElementById('term').value) || 0;
+  const el = document.getElementById('termYear');
+  if (m >= 12) el.textContent = `(${Math.floor(m/12)}년 ${m%12}개월)`;
+  else el.textContent = '';
+}
+
+// 숫자 입력 → 슬라이더 동기화
+['loanAmt','rate','term'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() {
+    const rId = id + 'Range';
+    const r = document.getElementById(rId);
+    r.value = this.value;
+    const ranges = { loanAmt:[1000000,1000000000], rate:[0.1,30], term:[1,480] };
+    updateRangeColor(r, ...ranges[id]);
+    if (id === 'term') updateTermYear();
+  });
+});
+
+// 초기 슬라이더 색상
+updateRangeColor(document.getElementById('loanRange'), 1000000, 1000000000);
+updateRangeColor(document.getElementById('rateRange'), 0.1, 30);
+updateRangeColor(document.getElementById('termRange'), 1, 480);
+updateTermYear();
+
+function calculate() {
+  const P = parseFloat(document.getElementById('loanAmt').value);
+  const annualRate = parseFloat(document.getElementById('rate').value);
+  const n = parseInt(document.getElementById('term').value);
+  const method = document.querySelector('input[name="repay"]:checked').value;
+
+  if (!P || !annualRate || !n) return;
+
+  const r = annualRate / 100 / 12;
+  let schedule = [];
+
+  if (method === 'equal') {
+    // 원리금균등
+    const M = P * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+    let bal = P;
+    for (let i = 1; i <= n; i++) {
+      const intPart = bal * r;
+      const prinPart = M - intPart;
+      bal -= prinPart;
+      schedule.push({ month: i, payment: M, principal: prinPart, interest: intPart, balance: Math.max(0, bal) });
+    }
+  } else if (method === 'principal') {
+    // 원금균등
+    const prinPart = P / n;
+    let bal = P;
+    for (let i = 1; i <= n; i++) {
+      const intPart = bal * r;
+      const payment = prinPart + intPart;
+      bal -= prinPart;
+      schedule.push({ month: i, payment, principal: prinPart, interest: intPart, balance: Math.max(0, bal) });
+    }
+  } else {
+    // 만기일시
+    const monthlyInt = P * r;
+    for (let i = 1; i <= n; i++) {
+      const payment = i < n ? monthlyInt : P + monthlyInt;
+      const prinPart = i < n ? 0 : P;
+      schedule.push({ month: i, payment, principal: prinPart, interest: monthlyInt, balance: i < n ? P : 0 });
+    }
+  }
+
+  const totalPayment = schedule.reduce((a, b) => a + b.payment, 0);
+  const totalInterest = totalPayment - P;
+
+  // 요약
+  document.getElementById('r-monthly').textContent = fmt(schedule[0].payment);
+  document.getElementById('r-total').textContent   = fmt(totalPayment);
+  document.getElementById('r-interest').textContent= fmt(totalInterest);
+
+  // 파이차트
+  const pct = (P / totalPayment) * 100;
+  const interestPct = 100 - pct;
+  const circ = 2 * Math.PI * 15.9;
+  const mainLen = (pct / 100) * 100;
+  document.getElementById('pie-main').setAttribute('stroke-dasharray', `${mainLen} ${100 - mainLen}`);
+  document.getElementById('leg-principal').textContent = `원금: ${fmt(P)}`;
+  document.getElementById('leg-interest').textContent  = `이자: ${fmt(totalInterest)}`;
+  document.getElementById('leg-ratio').textContent     = `원금 ${pct.toFixed(1)}% / 이자 ${interestPct.toFixed(1)}%`;
+
+  // 스케줄 테이블
+  const tbody = document.getElementById('scheduleBody');
+  tbody.innerHTML = schedule.map(s => `
+    <tr>
+      <td>${s.month}회</td>
+      <td>${fmt(s.payment)}</td>
+      <td>${fmt(s.principal)}</td>
+      <td>${fmt(s.interest)}</td>
+      <td>${fmt(s.balance)}</td>
+    </tr>
+  `).join('');
+
+  const card = document.getElementById('resultCard');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+}
+
+function toggleSchedule() {
+  const wrap = document.getElementById('scheduleWrap');
+  const btn  = document.getElementById('scheduleToggle');
+  const open = wrap.style.display === 'none';
+  wrap.style.display = open ? 'block' : 'none';
+  btn.classList.toggle('open', open);
+  btn.childNodes[1].textContent = open ? ' 월별 상환 스케줄 접기' : ' 월별 상환 스케줄 보기';
+}
+</script>
+</body>
+</html>
