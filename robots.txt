@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://loan-calculator-henna-five.vercel.app/sitemap.xml
