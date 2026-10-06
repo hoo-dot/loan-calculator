@@ -590,7 +590,7 @@
 
 <body>
   <div class="wrapper">
-    <h1>� 바나나 대출계산기</h1>
+    <h1>🍌 바나나 대출계산기</h1>
 
     <!-- 입력 카드 -->
     <div class="card">
@@ -878,7 +878,7 @@
     updateTermYear();
 
     function calculate() {
-      const P = parseFloat(document.getElementById('loanAmt').value);
+      const P = parseFloat(document.getElementById('loanAmt').value.replace(/,/g, ''));
       const annualRate = parseFloat(document.getElementById('rate').value);
       const n = parseInt(document.getElementById('term').value);
       const method = document.querySelector('input[name="repay"]:checked').value;
